@@ -10,11 +10,13 @@
 
 module.exports = function (grunt) {
   var compass = require('./lib/compass').init(grunt);
+  var path = require('path');
 
-  function compile(args, cb) {
+  function compile(args, cb, opts) {
     var child = grunt.util.spawn({
       cmd: args.shift(),
-      args: args
+      args: args,
+      opts: opts
     }, function (err, result, code) {
       var success = code === 0;
 
@@ -48,6 +50,13 @@ module.exports = function (grunt) {
     var configContext = compass.buildConfigContext(options);
     // get the array of arguments for the compass command
     var args = compass.buildArgsArray(options);
+    
+    // Set working directory.  Note grunt does provide a a grunt.file.setBase function for this but i think this is global to all tasks
+    var opts = options.opts || {};
+    // Resolve relative paths
+    if (opts.cwd) {
+        opts.cwd = path.resolve(opts.cwd);
+    }
 
     configContext(function (err, path) {
       if (err) {
@@ -58,7 +67,7 @@ module.exports = function (grunt) {
         args.push('--config', path);
       }
 
-      compile(args, cb);
+      compile(args, cb, opts);
     });
   });
 };
